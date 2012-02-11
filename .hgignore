@@ -1,0 +1,11 @@
+syntax: glob
+*Debug*
+*sln
+.cproject
+.project
+*ipch
+*vcxproj*
+*exe
+*sdf
+*suo
+graphgen/graph.txt
