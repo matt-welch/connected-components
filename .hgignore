@@ -8,4 +8,7 @@ syntax: glob
 *exe
 *sdf
 *suo
-graphgen/graph.txt
+*graph.txt
+connected
+*.o
+*.d
