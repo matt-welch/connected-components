@@ -22,12 +22,17 @@ public:
 // methods
 				GraphNode(void);
 	virtual		~GraphNode(void);
-	void		MakeSet(GraphNode &x);
-	void		Union(GraphNode &x, GraphNode &y);
-	void		Link(GraphNode &x, GraphNode &y);
-	GraphNode	FindSet(GraphNode x);
+				GraphNode(int vertexNumber);
+	void		MakeSet();
+	void		Union(GraphNode *y);
+	void		Link(GraphNode *x, GraphNode *y);
+	GraphNode*	FindSet();
+	void		SetRank(int newRank){_rank = newRank;}
+	int			GetRank(){return _rank;}
+	int			GetVertex(){return _vertex;}
 
 // data members: 
+	int			_vertex;
 	GraphNode	*_parent;
 	int			_rank;
 };
