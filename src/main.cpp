@@ -77,7 +77,7 @@ void printVectorMatrix(vector< vector<int> > array){
 // beginning of Connected Components driver
 int main(){
 	ifstream infile;
-	string inFileName = "graph.txt";
+	string inFileName = "../graphs/graph_isolated.txt";
 	int neighbors;
 	string token;
 
