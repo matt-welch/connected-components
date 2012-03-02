@@ -77,7 +77,7 @@ void printVectorMatrix(vector< vector<int> > array){
 // beginning of Connected Components driver
 int main(){
 	ifstream infile;
-	string inFileName = "../graphs/graph_isolated.txt";
+	string inFileName = "graph.txt";
 	int neighbors;
 	string token;
 
@@ -139,46 +139,66 @@ int main(){
 	list = new GraphNode*[numNodes+1];
 	for(int i=1; i<=numNodes; ++i){
 		// Makes new nodes for each vertex & MakeSet(this) on each
-		list[i] = new GraphNode(i+1);
+		list[i] = new GraphNode(i);
 	}
 
-	stringstream buffer;
-	int numSets = 0;
+
+
+	// connected-components algorithm:
+	// each node is already its own set
+	// loop through each node's neighbors, connecting components
 	for(int i=1; i<=numNodes; ++i){
-		// loop through each node's neighbors
-		stringstream tempBuffer;
-		tempBuffer << "{" ;
-		tempBuffer << i;
-		bool validSet = true;
 		for(int j=1; j<=numNodes; ++j){
-			if(!list[i]->isVisited()){
-				if(graph[j][i]==1){
-					validSet = false;
-					if(list[i]->FindSet() != list[j]->FindSet()){
-						validSet = true;
-						list[j]->Union(list[i]);
-#ifdef DEBUG
-						cout << "Parent: " << i << ", Child: " << j << endl;
-#endif
-						if(j < numNodes)
-							tempBuffer << ", " << j ;
-					}
+			if(graph[j][i]==1){
+				if(list[i]->FindSet() != list[j]->FindSet()){
+					list[j]->Union(list[i]);
 				}
 			}
 		}
-		// add parent node here?
-		tempBuffer << "} \n";
 
-		// count the number of sets and display that info before displaying buffer
-		//buffer.str("");
-		if(validSet){
-			numSets++;
-			buffer << tempBuffer.str();
-		}
 	}
+
+	// determine Same-Components
+	int numSets = 0;
+	stringstream buffer;
+	for(int i = 0; i <= numNodes; ++i){
+		stringstream tempBuffer;
+		tempBuffer << "{" << list[i]->GetVertex();
+
+		if(i < numNodes && list[i]->isVisited()){
+			++numSets;
+			list[i]->Visit();
+			int nextNode = i + 1;
+			if(!list[nextNode]->isVisited()){
+				for(nextNode; nextNode < numNodes; ++nextNode){
+					if(list[i]->FindSet() == list[nextNode]->FindSet()){
+						list[nextNode]->Visit();
+						tempBuffer << " " << list[nextNode]->GetVertex();
+					}
+				}
+				tempBuffer << "}\n";
+			}
+		}
+		buffer << tempBuffer.str();
+	}
+
+
+/*
+	if(j < numNodes)
+		tempBuffer << ", " << j ;
+	// count the number of sets and display that info before displaying buffer
+	//buffer.str("");
+	if(validSet){
+		numSets++;
+		buffer << tempBuffer.str();
+	}
+*/
+
+
+
+
 	cout << "Number of Disjoint Sets found: " << numSets << endl;
 	cout << buffer.str() << endl << endl;
 
-	// determine Same-Components
 	return 0;
 }
