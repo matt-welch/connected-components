@@ -19,16 +19,16 @@ using std::stringstream;
 // Graph Node class declaration
 class GraphNode {
 public: 
-// methods
+	// methods
 				GraphNode(void);
-	virtual		~GraphNode(void);
 				GraphNode(int vertexNumber);
+	virtual		~GraphNode(void);
 
 	int			GetRank(){return _rank;}
 	void		SetRank(int newRank){_rank = newRank;}
 	int			GetVertex(){return _vertex;}
 	bool		isVisited(){return _visited;}
-	void		Visit(){_visited = true;};
+	void		Visit(){_visited = true;}
 
 	// disjoint set operations - maybe in main()??
 	void		MakeSet();
@@ -41,7 +41,7 @@ private:
 	void		InitMembers();
 // data members: 
 	int			_vertex;
-	GraphNode	*_parent;
+	GraphNode*	_parent;
 	int			_rank;
 	bool		_visited;
 };

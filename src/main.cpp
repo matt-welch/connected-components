@@ -87,6 +87,7 @@ int main(){
 	if(infile.fail()){
 		cout << endl <<"An error occurred while reading from the file \""
 			<< inFileName << "\"." << endl;
+		exit(1);
 	}else{
 		// read the nodes in from the graph
 		infile >> numNodes; // read in the number of nodes from the first line
@@ -122,7 +123,6 @@ int main(){
 				infile >> token;
 				graph[i][atoi(token.c_str())] = 1;
 			}
-
 		}
 		
 #ifdef DEBUG
@@ -143,33 +143,42 @@ int main(){
 	}
 
 	stringstream buffer;
+	int numSets = 0;
 	for(int i=1; i<=numNodes; ++i){
 		// loop through each node's neighbors
-		buffer << "{" ;
+		stringstream tempBuffer;
+		tempBuffer << "{" ;
+		tempBuffer << i;
+		bool validSet = true;
 		for(int j=1; j<=numNodes; ++j){
-			if(graph[i][j]==1){
-				if(list[i]->FindSet() != list[j]->FindSet())
-				{
-					cout << "Parent: " << i << ", Child: " << j << endl;
-					buffer << j << ", ";
-					list[i]->Union(list[j]);
+			if(!list[i]->isVisited()){
+				if(graph[j][i]==1){
+					validSet = false;
+					if(list[i]->FindSet() != list[j]->FindSet()){
+						validSet = true;
+						list[j]->Union(list[i]);
+#ifdef DEBUG
+						cout << "Parent: " << i << ", Child: " << j << endl;
+#endif
+						if(j < numNodes)
+							tempBuffer << ", " << j ;
+					}
 				}
 			}
 		}
 		// add parent node here?
-		buffer << "} \n";
-
-
+		tempBuffer << "} \n";
 
 		// count the number of sets and display that info before displaying buffer
 		//buffer.str("");
+		if(validSet){
+			numSets++;
+			buffer << tempBuffer.str();
+		}
 	}
-	// cout << buffer.str() << endl << endl;
+	cout << "Number of Disjoint Sets found: " << numSets << endl;
+	cout << buffer.str() << endl << endl;
 
 	// determine Same-Components
-
-
-	cout << endl << endl << "Microsoft Visual Studio 2010 is shite!!!" << endl << endl;
-
 	return 0;
 }
