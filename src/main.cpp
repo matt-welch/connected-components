@@ -77,7 +77,7 @@ void printVectorMatrix(vector< vector<int> > array){
 // beginning of Connected Components driver
 int main(){
 	ifstream infile;
-	string inFileName = "graph.txt";
+	string inFileName = "../graphs/graph_10K.txt";
 	int neighbors;
 	string token;
 
@@ -161,44 +161,31 @@ int main(){
 	// determine Same-Components
 	int numSets = 0;
 	stringstream buffer;
-	for(int i = 0; i <= numNodes; ++i){
+	for(int i = 1; i <= numNodes; ++i){
 		stringstream tempBuffer;
-		tempBuffer << "{" << list[i]->GetVertex();
-
-		if(i < numNodes && list[i]->isVisited()){
+		if(!list[i]->isVisited()){
+			tempBuffer << "{" << list[i]->GetVertex();
 			++numSets;
 			list[i]->Visit();
-			int nextNode = i + 1;
-			if(!list[nextNode]->isVisited()){
-				for(nextNode; nextNode < numNodes; ++nextNode){
-					if(list[i]->FindSet() == list[nextNode]->FindSet()){
-						list[nextNode]->Visit();
-						tempBuffer << " " << list[nextNode]->GetVertex();
+			if(i < numNodes){
+				int nextNode = i + 1;
+				if(!list[nextNode]->isVisited()){
+					for(nextNode; nextNode < numNodes; ++nextNode){
+						if(list[i]->FindSet() == list[nextNode]->FindSet()){
+							list[nextNode]->Visit();
+							tempBuffer << " " << list[nextNode]->GetVertex();
+						}
 					}
 				}
-				tempBuffer << "}\n";
 			}
+			tempBuffer << "}\n";
 		}
 		buffer << tempBuffer.str();
 	}
 
-
-/*
-	if(j < numNodes)
-		tempBuffer << ", " << j ;
-	// count the number of sets and display that info before displaying buffer
-	//buffer.str("");
-	if(validSet){
-		numSets++;
-		buffer << tempBuffer.str();
-	}
-*/
-
-
-
-
 	cout << "Number of Disjoint Sets found: " << numSets << endl;
 	cout << buffer.str() << endl << endl;
+	cout << "Number of Disjoint Sets found: " << numSets << endl;
 
 	return 0;
 }
