@@ -77,16 +77,16 @@ void printVectorMatrix(vector< vector<int> > array){
 // beginning of Connected Components driver
 int main(int argc, char* argv[]){
 	ifstream infile;
-	string inFileName = "graph.txt";
-	string tempFilename;
 	int neighbors;
 	string token;
+
+	// default filename if no 2nd arg provided at cmd line
+	string inFileName = "graph.txt";
 
 	//=======================================================
 	if (argc == 2){ // argc should be 2 for correct execution
 		inFileName = argv[1];
 	}
-
 	//=======================================================
 
 	// ifstream.open() requires a const char*
@@ -112,21 +112,8 @@ int main(int argc, char* argv[]){
 			}
 		}
 
-#ifdef DEBUG
-		cout << "Initialized::" << endl;
-		printMatrix(graph, numNodes);
-#ifdef VECTORARRAY
-		printVectorMatrix(array);
-#endif
-#endif
-
-
 		for(int i=1; i<=numNodes; ++i){
 			infile >> neighbors;
-
-#ifdef DISABLE
-			cout << neighbors << endl;
-#endif
 			for(int j=1; j <= neighbors; ++j){
 				infile >> token;
 				graph[i][atoi(token.c_str())] = 1;
@@ -139,62 +126,89 @@ int main(int argc, char* argv[]){
 #endif
 
 		infile.close();
-		cout << endl <<"A graph with "<< numNodes <<" nodes has been read in from the file \"" << inFileName << "\"." << endl;
+		cout <<"A graph with "<< numNodes <<" nodes has been read in from the file \"" << inFileName << "\"." << endl;
 	}
 
 	// take graph file and determine the number of connected components
-	// initialize sets
+	// initialize sets (while building nodes)
 	list = new GraphNode*[numNodes+1];
-	for(int i=1; i<=numNodes; ++i){
+	int disjointSet[numNodes+1];
+
+	for(int i=0; i<=numNodes; ++i){
 		// Makes new nodes for each vertex & MakeSet(this) on each
 		list[i] = new GraphNode(i);
+		disjointSet[i] = i;
 	}
-
-
-
+	disjointSet[0] = numNodes;
+#ifdef DEBUG
+	cout << "Disjoint Set Representation: sets=" << disjointSet[0] << endl
+			<< "[";
+	for(int i = 1; i <= numNodes; ++i){
+		if(i!=1)
+			cout << ", ";
+		cout << disjointSet[i];
+	}
+	cout << "]" << endl;
+#endif
 	// connected-components algorithm:
 	// each node is already its own set
 	// loop through each node's neighbors, connecting components
+	int numSets = numNodes;  // numSets is initially == numNodes
 	for(int i=1; i<=numNodes; ++i){
 		for(int j=1; j<=numNodes; ++j){
-			if(graph[j][i]==1 &&
-					(list[i]->FindSet() != list[j]->FindSet()) ){
-					list[j]->Union(list[i]);
-
+			if(graph[j][i]==1 && (list[i]->FindSet() != list[j]->FindSet()) ){
+				list[i]->Union(list[j]);
+				if(j>i)
+					disjointSet[j] = disjointSet[i];
+				else
+					disjointSet[i] = disjointSet[j];
+#ifdef DEBUG
+				cout << "Union(" << i << ", " << j << ")" << endl;
+#endif
+				numSets--;// remove one set from the count on union
 			}
 		}
 	}
+	// hold the number of sets in the array
+	disjointSet[0] = numSets;
 
-	// determine Same-Components
-	int numSets = 0;
-	stringstream buffer;
+#ifdef DEBUG
+	cout << "Disjoint Set Representation: sets=" <<  disjointSet[0] << endl
+			<< "[";
 	for(int i = 1; i <= numNodes; ++i){
-		stringstream tempBuffer;
-		if(!list[i]->isVisited()){
-			tempBuffer << "{" << list[i]->GetVertex();
-			++numSets;
-			list[i]->Visit();
-			if(i < numNodes){
-				int nextNode = i + 1;
-				if(!list[nextNode]->isVisited()){
-					for(; nextNode < numNodes; ++nextNode){
-						if(list[i]->FindSet() == list[nextNode]->FindSet()){
-							list[nextNode]->Visit();
-							tempBuffer << " " << list[nextNode]->GetVertex();
-						}
-					}
-				}
-			}else{
+		if(i!=1)
+			cout << ", ";
+		cout << disjointSet[i];
+	}
+	cout << "]" << endl;
+#endif
 
+	// determine Same-Components, create printable results
+#ifdef DEBUG
+	cout << ":::OUTPUT:::" << endl;
+#endif
+	cout << numSets << endl;
+
+	for(int i = 1; i<=numNodes; ++i){
+		stringstream buffer;
+		int setSize = 0;
+		buffer << setSize << endl << buffer.str();
+#ifdef DEBUG
+		cout << "Set Rep: ";
+#endif
+		for(int j = i; j<=numNodes; ++j){
+			if(disjointSet[j] == i){
+#ifdef DEBUG
+				cout << j << ", " << disjointSet[j] << endl;
+#endif
+				++setSize;
+				if(j>i)
+					buffer << ", ";
+				buffer << j;
 			}
-			tempBuffer << "}\n";
 		}
-		buffer << tempBuffer.str();
 	}
 
-	cout << "Number of Disjoint Sets found: " << numSets << endl;
-	cout << buffer.str() << endl << endl;
-	cout << "Number of Disjoint Sets found: " << numSets << endl;
-
+	cout << endl << endl;
 	return 0;
 }
