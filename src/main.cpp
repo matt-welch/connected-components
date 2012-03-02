@@ -91,24 +91,6 @@ int main(){
 		// read the nodes in from the graph
 		infile >> numNodes; // read in the number of nodes from the first line
 
-#ifdef VECTORARRAY
-		// create a vector-2D array
-		vector< vector<int> > array(numNodes);
-
-		for(vector< vector<int> >::iterator x = array.begin();
-				x != array.end();
-				++x)
-		{
-			for(vector<int>::iterator cell = x->begin();
-					cell != x->end();
-					++cell)
-			{
-				*cell = 6;
-				cout << "Cell contents:[" << *cell << "]" << endl;
-			}
-		}
-#endif
-
 		// create adjacency matrix here (one more row than needed so can ignore row-0
 		graph = new int*[numNodes+1];
 
@@ -160,18 +142,29 @@ int main(){
 		list[i] = new GraphNode(i+1);
 	}
 
+	stringstream buffer;
 	for(int i=1; i<=numNodes; ++i){
 		// loop through each node's neighbors
+		buffer << "{" ;
 		for(int j=1; j<=numNodes; ++j){
 			if(graph[i][j]==1){
 				if(list[i]->FindSet() != list[j]->FindSet())
 				{
 					cout << "Parent: " << i << ", Child: " << j << endl;
+					buffer << j << ", ";
 					list[i]->Union(list[j]);
 				}
 			}
 		}
+		// add parent node here?
+		buffer << "} \n";
+
+
+
+		// count the number of sets and display that info before displaying buffer
+		//buffer.str("");
 	}
+	// cout << buffer.str() << endl << endl;
 
 	// determine Same-Components
 

@@ -11,15 +11,18 @@
 #include "GraphNode.hpp"
 
 GraphNode::GraphNode(){
+	InitMembers();
 }
 
 GraphNode::GraphNode(int vertexNumber){
 	// constructor for GraphNodes - replaces need to MakeSet on each
-	_parent = this;
 	_vertex = vertexNumber;
-	_rank = 0;
+	InitMembers();
 }
 
+void GraphNode::InitMembers(){
+	MakeSet();
+}
 GraphNode::~GraphNode(){
 }
 
@@ -46,4 +49,12 @@ GraphNode* GraphNode::FindSet(){
 	if(this != this->_parent)
 		this->_parent = this->_parent->FindSet();
 	return this->_parent;
+}
+
+string GraphNode::ToString(){
+	stringstream output;
+	output << "V: " << _vertex <<
+			", P: " << _parent->GetVertex() <<
+			", R: " << _rank;
+	return output.str();
 }
