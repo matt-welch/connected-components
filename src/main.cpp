@@ -75,11 +75,19 @@ void printVectorMatrix(vector< vector<int> > array){
 }
 
 // beginning of Connected Components driver
-int main(){
+int main(int argc, char* argv[]){
 	ifstream infile;
-	string inFileName = "../graphs/graph_10K.txt";
+	string inFileName = "graph.txt";
+	string tempFilename;
 	int neighbors;
 	string token;
+
+	//=======================================================
+	if (argc == 2){ // argc should be 2 for correct execution
+		inFileName = argv[1];
+	}
+
+	//=======================================================
 
 	// ifstream.open() requires a const char*
 	infile.open((char*)inFileName.c_str()); //2nd arg: ifstream::in
@@ -149,13 +157,12 @@ int main(){
 	// loop through each node's neighbors, connecting components
 	for(int i=1; i<=numNodes; ++i){
 		for(int j=1; j<=numNodes; ++j){
-			if(graph[j][i]==1){
-				if(list[i]->FindSet() != list[j]->FindSet()){
+			if(graph[j][i]==1 &&
+					(list[i]->FindSet() != list[j]->FindSet()) ){
 					list[j]->Union(list[i]);
-				}
+
 			}
 		}
-
 	}
 
 	// determine Same-Components
@@ -170,13 +177,15 @@ int main(){
 			if(i < numNodes){
 				int nextNode = i + 1;
 				if(!list[nextNode]->isVisited()){
-					for(nextNode; nextNode < numNodes; ++nextNode){
+					for(; nextNode < numNodes; ++nextNode){
 						if(list[i]->FindSet() == list[nextNode]->FindSet()){
 							list[nextNode]->Visit();
 							tempBuffer << " " << list[nextNode]->GetVertex();
 						}
 					}
 				}
+			}else{
+
 			}
 			tempBuffer << "}\n";
 		}
