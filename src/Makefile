@@ -23,3 +23,6 @@ debug: connected
 
 easy: CONFIG=$(EASY_FLAGS)
 easy: connected
+
+test: connected
+	./connected
