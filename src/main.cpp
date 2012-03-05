@@ -23,6 +23,13 @@
 #include <string>
 using std::string;
 
+#include <ctime>
+using namespace std;
+
+#include <sys/time.h>
+#include <stdio.h>
+#include <unistd.h>
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -80,6 +87,21 @@ int main(int argc, char* argv[]){
 	int neighbors;
 	string token;
 
+	time_t startTime, stopTime;
+
+	// get time for start of the program
+    time(&startTime);
+
+    struct timeval start, end;
+
+    long mtime, seconds, useconds;
+
+    gettimeofday(&start, NULL);
+//    usleep(2000);
+
+
+
+
 	// default filename if no 2nd arg provided at cmd line
 	string inFileName = "graph.txt";
 
@@ -94,7 +116,7 @@ int main(int argc, char* argv[]){
 
 	if(infile.fail()){
 		cout << endl <<"An error occurred while reading from the file \""
-			<< inFileName << "\"." << endl;
+				<< inFileName << "\"." << endl;
 		exit(1);
 	}else{
 		// read the nodes in from the graph
@@ -119,25 +141,29 @@ int main(int argc, char* argv[]){
 				graph[i][atoi(token.c_str())] = 1;
 			}
 		}
-		
+
 #ifdef DEBUG
 		cout << "Filled::" << endl;
 		printMatrix(graph, numNodes);
 #endif
 
 		infile.close();
+#ifdef DEBUG
 		cout <<"A graph with "<< numNodes <<" nodes has been read in from the file \"" << inFileName << "\"." << endl;
+#endif
 	}
 
 	// take graph file and determine the number of connected components
 	// initialize sets (while building nodes)
 	list = new GraphNode*[numNodes+1];
 	int disjointSet[numNodes+1];
+	bool visited[numNodes+1];
 
 	for(int i=0; i<=numNodes; ++i){
 		// Makes new nodes for each vertex & MakeSet(this) on each
 		list[i] = new GraphNode(i);
 		disjointSet[i] = i;
+		visited[i] = false;
 	}
 	disjointSet[0] = numNodes;
 #ifdef DEBUG
@@ -154,25 +180,42 @@ int main(int argc, char* argv[]){
 	// each node is already its own set
 	// loop through each node's neighbors, connecting components
 	int numSets = numNodes;  // numSets is initially == numNodes
+	//#pragma omp parallel for shared(numSets, disjointSet, numNodes)
 	for(int i=1; i<=numNodes; ++i){
-		for(int j=1; j<=numNodes; ++j){
-			if(graph[j][i]==1 && (list[i]->FindSet() != list[j]->FindSet()) ){
-				list[i]->Union(list[j]);
-				if(j>i)
-					disjointSet[j] = disjointSet[i];
-				else
-					disjointSet[i] = disjointSet[j];
+		int modified;
+		int cycles = 0;
+		GraphNode* currentParent = list[i]->FindSet();
+
+			modified = 0;
+			for(int j=1; j<=numNodes; ++j){
+				GraphNode* nextParent = list[j]->FindSet();
+				if(graph[j][i]==1 && (currentParent != nextParent) ){
+					// union the two sets
+					list[i]->Union(list[j]);
+					++modified;
+
+//disjointSet[j] > disjointSet[i]
+					// j>i
+					if(disjointSet[j] > disjointSet[i])
+						disjointSet[j] = disjointSet[i];
+					else
+						disjointSet[i] = disjointSet[j];
 #ifdef DEBUG
-				cout << "Union(" << i << ", " << j << ")" << endl;
+					cout << "Union(" << i << ", " << j << ")" << endl;
 #endif
-				numSets--;// remove one set from the count on union
+					//#pragma omp parallel atomic
+					numSets--;// remove one set from the count on union
+				}
 			}
-		}
+			++cycles;
+#ifdef DEBUG
+		cout << "Cycles = " << cycles << endl;
+#endif
 	}
 	// hold the number of sets in the array
 	disjointSet[0] = numSets;
 
-#ifdef DEBUG
+#if 1
 	cout << "Disjoint Set Representation: sets=" <<  disjointSet[0] << endl
 			<< "[";
 	for(int i = 1; i <= numNodes; ++i){
@@ -189,26 +232,58 @@ int main(int argc, char* argv[]){
 #endif
 	cout << numSets << endl;
 
+	vector<string> outputBuffer;
 	for(int i = 1; i<=numNodes; ++i){
 		stringstream buffer;
 		int setSize = 0;
-		buffer << setSize << endl << buffer.str();
+//		int setNum = disjointSet[i];
+		if(!visited[i]){
+			for(int j = i; j<=numNodes; ++j){
+				if(disjointSet[j] == i && !visited[j]){
 #ifdef DEBUG
-		cout << "Set Rep: ";
+					cout << j << ", " << disjointSet[j] << endl;
 #endif
-		for(int j = i; j<=numNodes; ++j){
-			if(disjointSet[j] == i){
+					++setSize;
+					if(j>i)
+						buffer << " ";
+					buffer << j;
+					visited[j] = true;
 #ifdef DEBUG
-				cout << j << ", " << disjointSet[j] << endl;
+					cout << "visited: " << j << endl;
 #endif
-				++setSize;
-				if(j>i)
-					buffer << ", ";
-				buffer << j;
+					}
+			}
+
+			if(setSize>0){
+				if(disjointSet[i] != disjointSet[i-1]){// new set
+					string temp = buffer.str();
+					buffer.str("");
+					buffer << setSize << "\n" << temp << "\n";
+				}
+				cout << buffer.str();
 			}
 		}
 	}
 
-	cout << endl << endl;
+	double junk = 1.23456789012;
+	time(&stopTime);
+	gettimeofday(&end, NULL);
+
+    seconds  = end.tv_sec  - start.tv_sec;
+    useconds = end.tv_usec - start.tv_usec;
+
+    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+
+
+    printf("Elapsed time: %ld milliseconds\n", mtime);
+
+	cout.precision(6);
+
+	cout << "Elapsed Program Time: " << mtime/1000.0 << " seconds" << endl;
+	cout << "Elapsed Program Time: " << useconds << " us" << endl;
+
+
+	cout << endl;
+
 	return 0;
 }
