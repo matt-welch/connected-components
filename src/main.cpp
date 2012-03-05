@@ -220,7 +220,7 @@ int main(int argc, char* argv[]){
 	// hold the number of sets in the array
 	disjointSet[0] = numSets;
 
-#if 1
+#ifdef DEBUG
 	cout << "Disjoint Set Representation:(" << numSets << ")sets=" <<  disjointSet[0] << endl
 			<< "[";
 	for(int i = 1; i <= numNodes; ++i){
@@ -288,8 +288,8 @@ int main(int argc, char* argv[]){
 //	cout << "Elapsed Program Time: " << useconds << " us" << endl;
 	cout << "Elapsed Program Time: " << preciseTime << " s" << endl;
 
-	cout << "Total number of sets: "<< numSets << endl;
-	cout << "Total number of Unions: "<< numUnions << endl;
+	cout << "Total number of Sets\t= "<< numSets << endl;
+	cout << "Total number of Unions\t= "<< numUnions << endl;
 	cout << endl;
 
 	return 0;
