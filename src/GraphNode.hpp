@@ -15,6 +15,7 @@
 using std::string;
 #include <sstream>
 using std::stringstream;
+#include <omp.h>
 
 // Graph Node class declaration
 class GraphNode {
