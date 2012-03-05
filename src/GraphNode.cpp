@@ -43,6 +43,11 @@ void GraphNode::Link(GraphNode *x, GraphNode *y){
 		if(x->_rank == y->_rank)
 			y->_rank++;
 	}
+/*	if(x->_vertex < y->_vertex)
+		y->_parent = x;
+	else{
+		x->_parent = y;
+	}*/
 }
 
 GraphNode* GraphNode::FindSet(){

@@ -12,11 +12,4 @@ tidy: clean
 
 DEBUG_FLAGS = -g3 -ggdb -O0 -Wall -pedantic -DDEBUG
 CONFIG	= -Wall -pedantic
-EASY_FLAGS = 
 
-
-debug: CONFIG=$(DEBUG_FLAGS)
-debug: connected
-
-easy: CONFIG=$(EASY_FLAGS)
-easy: connected

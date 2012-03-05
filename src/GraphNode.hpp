@@ -35,6 +35,7 @@ public:
 	void		Union(GraphNode *y);
 	void		Link(GraphNode *x, GraphNode *y);
 	GraphNode*	FindSet();
+	int			GetParent(){return _parent->_vertex;}
 	string		ToString();
 
 private:
