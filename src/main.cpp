@@ -86,28 +86,31 @@ int main(int argc, char* argv[]){
 	ifstream infile;
 	int neighbors;
 	string token;
-
-	time_t startTime, stopTime;
+	bool quiet = false;
+	bool verbose = false;
 
 	// get time for start of the program
-    time(&startTime);
-
-    struct timeval start, end;
-
+	struct timeval start, end;
     long mtime, seconds, useconds;
-
     gettimeofday(&start, NULL);
-//    usleep(2000);
 
-
-
-
-	// default filename if no 2nd arg provided at cmd line
+    // default filename if no 2nd arg provided at cmd line
 	string inFileName = "graph.txt";
 
 	//=======================================================
-	if (argc == 2){ // argc should be 2 for correct execution
+	if (argc > 1){ // argc should be 2 for correct execution
 		inFileName = argv[1];
+		if(argc > 2){
+			string runFlag(argv[2]);
+			if(runFlag.compare("-q") == 0){
+				quiet = true;
+				verbose = false;
+			}else if(runFlag.compare("-v") == 0){
+				quiet = false;
+				verbose = true;
+			}
+
+		}
 	}
 	//=======================================================
 
@@ -158,6 +161,8 @@ int main(int argc, char* argv[]){
 	list = new GraphNode*[numNodes+1];
 	int disjointSet[numNodes+1];
 	bool visited[numNodes+1];
+	int numSets = numNodes;  // numSets is initially == numNodes
+
 
 	for(int i=0; i<=numNodes; ++i){
 		// Makes new nodes for each vertex & MakeSet(this) on each
@@ -167,56 +172,56 @@ int main(int argc, char* argv[]){
 	}
 	disjointSet[0] = numNodes;
 #ifdef DEBUG
-	cout << "Disjoint Set Representation: sets=" << disjointSet[0] << endl
-			<< "[";
-	for(int i = 1; i <= numNodes; ++i){
-		if(i!=1)
-			cout << ", ";
-		cout << disjointSet[i];
+	if(verbose){
+		cout << "Disjoint Set Representation:(" << numSets << ")sets=" <<  disjointSet[0] << endl
+				<< "[";
+		for(int i = 1; i <= numNodes; ++i){
+			if(i!=1)
+				cout << ", ";
+			cout << disjointSet[i];
+		}
+		cout << "]" << endl;
 	}
-	cout << "]" << endl;
 #endif
 	// connected-components algorithm:
 	// each node is already its own set
 	// loop through each node's neighbors, connecting components
-	int numSets = numNodes;  // numSets is initially == numNodes
 	//#pragma omp parallel for shared(numSets, disjointSet, numNodes)
+	int numUnions = 0;
 	for(int i=1; i<=numNodes; ++i){
-		int modified;
-		int cycles = 0;
+
 		GraphNode* currentParent = list[i]->FindSet();
 
-			modified = 0;
 			for(int j=1; j<=numNodes; ++j){
 				GraphNode* nextParent = list[j]->FindSet();
 				if(graph[j][i]==1 && (currentParent != nextParent) ){
 					// union the two sets
 					list[i]->Union(list[j]);
-					++modified;
 
-//disjointSet[j] > disjointSet[i]
-					// j>i
-					if(disjointSet[j] > disjointSet[i])
+					// use parent of lower rank
+					if(disjointSet[j] > disjointSet[i]){
+						// probably not in a set yet
 						disjointSet[j] = disjointSet[i];
-					else
+						//#pragma omp parallel atomic
+						numSets--;// remove one set from the count on union
+						numUnions++;
+					}
+					else{
 						disjointSet[i] = disjointSet[j];
+					}
+
 #ifdef DEBUG
 					cout << "Union(" << i << ", " << j << ")" << endl;
 #endif
-					//#pragma omp parallel atomic
-					numSets--;// remove one set from the count on union
+
 				}
 			}
-			++cycles;
-#ifdef DEBUG
-		cout << "Cycles = " << cycles << endl;
-#endif
 	}
 	// hold the number of sets in the array
 	disjointSet[0] = numSets;
 
 #if 1
-	cout << "Disjoint Set Representation: sets=" <<  disjointSet[0] << endl
+	cout << "Disjoint Set Representation:(" << numSets << ")sets=" <<  disjointSet[0] << endl
 			<< "[";
 	for(int i = 1; i <= numNodes; ++i){
 		if(i!=1)
@@ -230,8 +235,9 @@ int main(int argc, char* argv[]){
 #ifdef DEBUG
 	cout << ":::OUTPUT:::" << endl;
 #endif
-	cout << numSets << endl;
 
+	// print the number of sets prior to printing the contents of each set:
+	cout << numSets << endl;
 	vector<string> outputBuffer;
 	for(int i = 1; i<=numNodes; ++i){
 		stringstream buffer;
@@ -254,35 +260,36 @@ int main(int argc, char* argv[]){
 					}
 			}
 
-			if(setSize>0){
-				if(disjointSet[i] != disjointSet[i-1]){// new set
+			if(1){//setSize>0
+				if(disjointSet[i] != disjointSet[i-1] || numSets == 1){// new set
 					string temp = buffer.str();
 					buffer.str("");
 					buffer << setSize << "\n" << temp << "\n";
 				}
-				cout << buffer.str();
+				if(!quiet)
+					cout << buffer.str();
 			}
 		}
 	}
 
-	double junk = 1.23456789012;
-	time(&stopTime);
-	gettimeofday(&end, NULL);
 
+	// print program elapsed time
+	gettimeofday(&end, NULL);
     seconds  = end.tv_sec  - start.tv_sec;
     useconds = end.tv_usec - start.tv_usec;
+    mtime = ((seconds) * 1000 + useconds/1000.0);// + 0.5;
+    double preciseTime = seconds + useconds/1000000.0;
 
-    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+//    printf("Elapsed time: %ld milliseconds\n", mtime);
 
+	cout.precision(10);
 
-    printf("Elapsed time: %ld milliseconds\n", mtime);
+//	cout << "Elapsed Program Time: " << mtime/1000.0 << " seconds" << endl;
+//	cout << "Elapsed Program Time: " << useconds << " us" << endl;
+	cout << "Elapsed Program Time: " << preciseTime << " s" << endl;
 
-	cout.precision(6);
-
-	cout << "Elapsed Program Time: " << mtime/1000.0 << " seconds" << endl;
-	cout << "Elapsed Program Time: " << useconds << " us" << endl;
-
-
+	cout << "Total number of sets: "<< numSets << endl;
+	cout << "Total number of Unions: "<< numUnions << endl;
 	cout << endl;
 
 	return 0;

@@ -13,4 +13,6 @@ connected
 *.o
 *.d
 graphgen/graphgen
+*~
+*.out
 
