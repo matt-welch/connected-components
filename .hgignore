@@ -15,4 +15,8 @@ connected
 graphgen/graphgen
 *~
 *.out
+ParallelSets*
+analysis*
+parallel
+main.cpp.orig
 
