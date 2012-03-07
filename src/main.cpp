@@ -49,7 +49,7 @@ int** graph;
 GraphNode** list;
 int numNodes;
 
-
+// helper functions
 void PrintDisjointSet(int* disjointSet, int numSets){
 	cout << "Disjoint Set Representation:(" << numSets << ")" << endl
 			<< "[";
@@ -92,7 +92,7 @@ void printVectorMatrix(vector< vector<int> > array){
 	cout << endl;
 }
 
-// beginning of Connected Components driver
+// beginning of Connected Components driver - serial
 int main(int argc, char* argv[]){
 	ifstream infile;
 	int neighbors;
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]){
 	// default filename if no 2nd arg provided at cmd line
 	string inFileName = "graph.txt";
 
-	//=======================================================
+	// parse input arguments
 	if (argc > 1){ // argc should be 2 for correct execution
 		inFileName = argv[1];
 		if(argc > 2){
@@ -123,9 +123,8 @@ int main(int argc, char* argv[]){
 
 		}
 	}
-	//=======================================================
 
-	// ifstream.open() requires a const char*
+	// Open graph file for reading
 	infile.open((char*)inFileName.c_str()); //2nd arg: ifstream::in
 
 	if(infile.fail()){
@@ -147,6 +146,7 @@ int main(int argc, char* argv[]){
 			}
 		}
 
+		// read in file as tokens
 		for(int i=1; i<=numNodes; ++i){
 			infile >> neighbors;
 			for(int j=1; j <= neighbors; ++j){
@@ -169,8 +169,8 @@ int main(int argc, char* argv[]){
 	// take graph file and determine the number of connected components
 	// initialize sets (while building nodes)
 	list = new GraphNode*[numNodes+1];
-	int disjointSet[numNodes+1];
-	bool visited[numNodes+1];
+	int * disjointSet = new int[numNodes+1];
+	bool * visited = new bool[numNodes+1];
 	int numSets = numNodes;  // numSets is initially == numNodes
 	for(int i=0; i<=numNodes; ++i){
 		// Makes new nodes for each vertex & MakeSet(this) on each
@@ -183,11 +183,9 @@ int main(int argc, char* argv[]){
 #ifdef DEBUG
 	PrintDisjointSet(disjointSet, numSets);
 #endif
-	// connected-components algorithm:
+	// CONNECTED-COMPONENTS algorithm:
 	// each node is already its own set
 	// loop through each node's neighbors, connecting components
-	//#pragma omp parallel for shared(numSets, disjointSet, numNodes)
-	int numUnions = 0;
 	for(int i=1; i<=numNodes; ++i){
 		// get parent of current node
 		GraphNode* currentParent = list[i]->FindSet();
@@ -195,7 +193,7 @@ int main(int argc, char* argv[]){
 		for(int j=1; j<=numNodes; ++j){
 			if(graph[j][i]==1 ){
 				GraphNode* nextParent = list[j]->FindSet();
-				// there is an edge between node-i & node-j
+				// there exists an edge between node-i & node-j
 				if(currentParent != nextParent ){
 					// we are not yet in the same set
 					// union the two sets
@@ -209,9 +207,6 @@ int main(int argc, char* argv[]){
 					else{
 						disjointSet[i] = disjointSet[j];
 					}
-					//#pragma omp parallel atomic
-					numSets--;// remove one set from the count on union
-					numUnions++;
 
 #ifdef DEBUG
 					cout << "Union(" << i << ", " << j << ")" << endl;
@@ -234,20 +229,17 @@ int main(int argc, char* argv[]){
 	cout << ":::OUTPUT:::" << endl;
 #endif
 
-	// print the number of sets prior to printing the contents of each set:
-//	cout << numSets << endl;  // WRONG!
+	// SAME-COMPONENTS algorithm
+	// for each possible set, determine which nodes are in that set
 	stringstream outputBuffer;
 	int setCount = 0;
 	for(int i = 1; i<=numNodes; ++i){
 		stringstream buffer;
 		int setSize = 0;
-		//		int setNum = disjointSet[i];
 		GraphNode* currentSet = list[i]->FindSet();
 		if(!visited[i]){
 			for(int j = i; j<=numNodes; ++j){
 				if(list[j]->FindSet() == currentSet){
-					//				if(disjointSet[j] == i)
-					// the parent of j is i
 					++setSize;
 					if(j>i)
 						buffer << " ";
@@ -272,6 +264,15 @@ int main(int argc, char* argv[]){
 	cout << setCount << endl;
 	cout << outputBuffer.str();
 
+	// free nodes to prevent memory leaks (although there's really no point to this
+	for(int i = 0; i<numNodes+1; ++i){
+		delete list[i];
+	}
+	delete list;
+	delete[] disjointSet;
+	delete[] visited;
+
+
 	// print program elapsed time
 	gettimeofday(&end, NULL);
 	seconds  = end.tv_sec  - start.tv_sec;
@@ -282,8 +283,6 @@ int main(int argc, char* argv[]){
 
 	cout << "Elapsed Program Time: " << preciseTime << " s" << endl;
 
-//	cout << "Total number of Sets\t= "<< numSets << endl;
-//	cout << "Total number of Unions\t= "<< numUnions << endl;
 	cout << "Total number of Sets = "<< setCount << endl;
 	cout << endl;
 
